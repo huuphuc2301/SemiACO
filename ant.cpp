@@ -19,27 +19,12 @@
 #include "utils.h"
 #include "rand.h"
 #include "json.hpp"
+#include "heuristic.h"
+
+#define MAX_N 1005
 
 using namespace std;
-struct HeuristicData {
-    /// 
-    double get_distance(uint32_t from, uint32_t to) const {
-        
-    }
 
-    uint32_t find_node_with_max_value(uint32_t from, const std::vector<uint32_t> &nodes) const {
-        auto result = from;
-        auto min_dist = std::numeric_limits<double>::max();
-        for (auto node : nodes) {
-            auto dist = get_distance(from, node);
-            if (dist < min_dist) {
-                min_dist = dist;
-                result = node;
-            }
-        }
-        return result;
-    }
-};
 
 //choose the next node by probability
 uint32_t select_next_node(const MatrixPheromone &pheromone,
