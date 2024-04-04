@@ -1,6 +1,8 @@
 #include <iostream>
+#include "heuristic.h"
 using namespace std;
 
 int main() {
-    cout << "abc";
+    HeuristicData heuristicData;
+    heuristicData.readDataFromFile("./test/musk2_after_split.csv");
 }

@@ -1,28 +1,32 @@
 #include <iostream>
 #include <unordered_map>
 #include <cmath>
+#include <sstream>
+#include <vector>
 #define MAX_NUM_FEATURE 300
 
+using namespace std;
+
 struct HeuristicData {
-    int numFeature;
+    int numFeature = 0;
     double flCos[MAX_NUM_FEATURE][MAX_NUM_FEATURE];
     double flCorr[MAX_NUM_FEATURE][MAX_NUM_FEATURE];
     double MI[MAX_NUM_FEATURE];
     double MIC[MAX_NUM_FEATURE];
     double V[MAX_NUM_FEATURE];
 
-    std::vector<std::vector<int> > allFeatures;
-    std::vector<std::vector<int> > labeledFeatures;
-    std::vector<int> labels;
+    vector<vector<int> > allFeatures;
+    vector<vector<int> > labeledFeatures;
+    vector<int> labels;
 
     //todo
     double get_distance(uint32_t from, uint32_t to) const {
 
     }
 
-    uint32_t find_node_with_max_value(uint32_t from, const std::vector<uint32_t> &nodes) const {
+    uint32_t find_node_with_max_value(uint32_t from, const vector<uint32_t> &nodes) const {
         auto result = from;
-        auto min_dist = std::numeric_limits<double>::max();
+        auto min_dist = numeric_limits<double>::max();
         for (auto node : nodes) {
             auto dist = get_distance(from, node);
             if (dist < min_dist) {
@@ -34,8 +38,25 @@ struct HeuristicData {
     }
 
     //todo
-    void readDataFromFile(std::string fileName) {
-
+    void readDataFromFile(const char *fileName) {
+        freopen(fileName, "r", stdin);
+        string line;
+        getline(cin, line);
+        getline(cin, line);
+        vector<string> row = split(line, ',');
+        numFeature = row.size() - 2;
+        for (int i = 1; i <= numFeature; i++) {
+            vector<int> empty1;
+            allFeatures.push_back(empty1);
+            vector<int> empty2;
+            labeledFeatures.push_back(empty2);
+        }
+        addDataFromRow(row);
+        while (getline(cin, line)) {
+            row = split(line, ',');
+            addDataFromRow(row);
+        }
+        cout<<"finish";
     }
 
     void calculateFlCos() {
@@ -57,7 +78,19 @@ struct HeuristicData {
 
     }
 
-    static double mutualInformation(const std::vector<int>& labeledFeature, const std::vector<int>& label) {
+    void addDataFromRow(vector<string> row) {
+        for (int i = 0; i < numFeature; i++) {
+            allFeatures[i].push_back(stoi(row[i]));
+        }
+        if (row[numFeature + 1] == "1") {
+            for (int i = 0; i < numFeature; i++) {
+                labeledFeatures[i].push_back(stoi(row[i]));
+            }
+            labels.push_back(stoi(row[numFeature]));
+        }
+    }
+
+    static double mutualInformation(const vector<int>& labeledFeature, const vector<int>& label) {
         int totalSamples = labeledFeature.size();
         int countBoth[10000][20];
         int countX[10000];
@@ -83,7 +116,7 @@ struct HeuristicData {
 
 
 
-    static double dotProduct(const std::vector<int>& v1, const std::vector<int>& v2) {
+    static double dotProduct(const vector<int>& v1, const vector<int>& v2) {
         double result = 0.0;
         for (size_t i = 0; i < v1.size(); ++i) {
             result += v1[i] * v2[i];
@@ -91,7 +124,7 @@ struct HeuristicData {
         return result;
     }
 
-    static double magnitude(const std::vector<int>& v) {
+    static double magnitude(const vector<int>& v) {
         double result = 0.0;
         for (double val : v) {
             result += val * val;
@@ -99,7 +132,7 @@ struct HeuristicData {
         return sqrt(result);
     }
 
-    static double cosineSimilarity(const std::vector<int>& v1, const std::vector<int>& v2) {
+    static double cosineSimilarity(const vector<int>& v1, const vector<int>& v2) {
         double dot = dotProduct(v1, v2);
         double mag1 = magnitude(v1);
         double mag2 = magnitude(v2);
@@ -109,7 +142,15 @@ struct HeuristicData {
         return abs(dot / (mag1 * mag2));
     }
 
-
+    static vector<string> split(string s, char ch) {
+        vector<string> res;
+        istringstream is(s);
+        string item;
+        while (getline(is, item, ch)) {
+            res.push_back(item);
+        }
+        return res;
+    }
 
 
 };
