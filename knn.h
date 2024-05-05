@@ -17,11 +17,12 @@ using namespace std;
 struct KNN {
     vector<vector<double>> X_train;
     vector<int> y_train;
+    vector<int> features;
     int k;
 
     double euclideanDistance(const vector<double> &p1, const vector<double> &p2) {
         double distance = 0.0;
-        for (int i = 0; i < p1.size(); ++i) {
+        for (int i : features) {
             distance += pow(p1[i] - p2[i], 2);
         }
         return sqrt(distance);
