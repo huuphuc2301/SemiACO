@@ -65,6 +65,10 @@ struct KNN {
 
         return maxIndex;
     }
+
+    double calculateFscore(vector<int> features) {
+        return 0;
+    }
 };
 
 // Helper function to calculate Euclidean distance between two points

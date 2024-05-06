@@ -10,7 +10,7 @@ using namespace std;
 struct HeuristicData {
     int numFeature = 0;
     double flCos[MAX_NUM_FEATURE][MAX_NUM_FEATURE];
-    double flCorr[MAX_NUM_FEATURE][MAX_NUM_FEATURE];
+    double flCorr[MAX_NUM_FEATURE];
     double MI[MAX_NUM_FEATURE];
     double MIC[MAX_NUM_FEATURE];
     double V[MAX_NUM_FEATURE];
@@ -59,6 +59,15 @@ struct HeuristicData {
         cout<<"finish";
     }
 
+    void init() {
+        calculateFlCos();
+        calculateMI();
+        calculateMIC();
+        for (int i = 0; i < numFeature; i++) {
+            V[i] = flCorr[i] =  MIC[i];
+        }
+    }
+
     void calculateFlCos() {
         for (int i = 0; i < numFeature; i++) {
             for (int j = 0; j < numFeature; j++) {
@@ -68,14 +77,15 @@ struct HeuristicData {
     }
 
     void calculateMI() {
-        for (int i =0; i < numFeature; i++) {
+        for (int i = 0; i < numFeature; i++) {
             MI[i] = mutualInformation(labeledFeatures[i], labels);
         }
     }
 
-    //todo
     void calculateMIC() {
-
+        for (int i = 0; i < numFeature; i++) {
+            MIC[i] = MI[i];
+        }
     }
 
     void addDataFromRow(vector<string> row) {
