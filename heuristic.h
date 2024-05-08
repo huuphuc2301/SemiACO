@@ -18,10 +18,20 @@ struct HeuristicData {
     vector<vector<int> > allFeatures;
     vector<vector<int> > labeledFeatures;
     vector<int> labels;
+    uint32_t dimension_;
+    uint32_t target_;
 
     //todo
+
+    HeuristicData() {
+
+    }
     double get_distance(uint32_t from, uint32_t to) const {
 
+    }
+
+    double get(uint32_t from, uint32_t to) const {
+        
     }
 
     uint32_t find_node_with_max_value(uint32_t from, const vector<uint32_t> &nodes) const {

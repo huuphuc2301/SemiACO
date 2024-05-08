@@ -16,15 +16,15 @@ struct Timer {
     Timer() : start_time_(Clock::now()) {}
 
     // Time since the constructor was called
-    inline double get_elapsed_seconds() const noexcept {
+    inline double get_elapsed_seconds() const {
         return get_elapsed_nanoseconds() * 1e-9;
     }
 
-    inline double operator()() const noexcept {
+    inline double operator()() const {
         return get_elapsed_nanoseconds() * 1e-9;
     }
 
-    inline int64_t get_elapsed_nanoseconds() const noexcept {
+    inline int64_t get_elapsed_nanoseconds() const {
         return std::chrono::duration_cast<std::chrono::nanoseconds>
             (Clock::now() - start_time_).count();
     }

@@ -7,12 +7,12 @@ struct RouteIterator {
     const std::vector<uint32_t> &route_;
     size_t position_ = 0;
 
-    uint32_t goto_succ() noexcept {
+    uint32_t goto_succ() {
         position_ = (position_ + 1 < route_.size()) ? position_ + 1 : 0;
         return route_[position_];
     }
 
-    uint32_t goto_pred() noexcept {
+    uint32_t goto_pred() {
         position_ = position_ != 0 ? position_ - 1 : route_.size() - 1;
         return route_[position_];
     }
@@ -33,10 +33,10 @@ struct Solution {
         update_node_indices();
     }
 
-    void update(const std::vector<uint32_t> &route, double cost) {
-        route_ = route;
-        cost_ = cost;
-        update_node_indices();
+    void add(uint32_t node, double cost) {
+        route_.push_back(node);
+        node_indices_[node] = route_.size() - 1;
+        cost_ += cost;
     }
 
     void update(const Solution *other) {
@@ -52,23 +52,19 @@ struct Solution {
     }
 
     // We assume that route is undirected
-    [[nodiscard]] bool contains_edge(uint32_t edge_head, uint32_t edge_tail) const {
+    bool contains_edge(uint32_t edge_head, uint32_t edge_tail) const {
         return get_succ(edge_head) == edge_tail   // same edge
             || get_pred(edge_head) == edge_tail;  // reversed
     }
 
-    [[nodiscard]] uint32_t get_succ(uint32_t node) const {
+    uint32_t get_succ(uint32_t node) const {
         auto index = node_indices_[node];
         return route_[(index + 1u < route_.size()) ? index + 1u : 0u];
     }
 
-    [[nodiscard]] uint32_t get_pred(uint32_t node) const {
+    uint32_t get_pred(uint32_t node) const {
         auto index = node_indices_[node];
         return route_[(index > 0u) ? index - 1u : route_.size() - 1u];
-    }
-
-    RouteIterator get_iterator(uint32_t start_node) {
-        return { route_, node_indices_[start_node] };
     }
 };
 
@@ -108,7 +104,7 @@ struct Ant : public Solution {
         visited_bitmask_.set_bit(node);
     }
 
-    [[nodiscard]] bool is_visited(uint32_t node) const {
+    bool is_visited(uint32_t node) const {
         return visited_bitmask_.get_bit(node);
     }
 
