@@ -19,6 +19,8 @@ struct HeuristicData {
     vector<vector<int> > labeledFeatures;
     vector<int> labels;
 
+    vector<vector<int> > labeledSamples;
+
     //todo
     double get_distance(uint32_t from, uint32_t to) const {
 
@@ -46,17 +48,15 @@ struct HeuristicData {
         vector<string> row = split(line, ',');
         numFeature = row.size() - 2;
         for (int i = 1; i <= numFeature; i++) {
-            vector<int> empty1;
-            allFeatures.push_back(empty1);
-            vector<int> empty2;
-            labeledFeatures.push_back(empty2);
+            vector<int> empty;
+            allFeatures.push_back(empty);
+            labeledFeatures.push_back(empty);
         }
         addDataFromRow(row);
         while (getline(cin, line)) {
             row = split(line, ',');
             addDataFromRow(row);
         }
-        cout<<"finish";
     }
 
     void init() {
@@ -89,6 +89,14 @@ struct HeuristicData {
     }
 
     void addDataFromRow(vector<string> row) {
+        if (row[numFeature + 1] == "1") {
+            vector<int> sample;
+            for (string s : row) {
+                sample.push_back(stoi(s));
+            }
+            labeledSamples.push_back(sample);
+        }
+
         for (int i = 0; i < numFeature; i++) {
             allFeatures[i].push_back(stoi(row[i]));
         }
@@ -98,6 +106,7 @@ struct HeuristicData {
             }
             labels.push_back(stoi(row[numFeature]));
         }
+
     }
 
     static double mutualInformation(const vector<int>& labeledFeature, const vector<int>& label) {
@@ -134,7 +143,7 @@ struct HeuristicData {
         return result;
     }
 
-    static double magnitude(const vector<int>& v) {
+    static double magnitude(const vector<int> &v) {
         double result = 0.0;
         for (double val : v) {
             result += val * val;
