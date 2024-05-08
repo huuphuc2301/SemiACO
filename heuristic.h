@@ -10,7 +10,7 @@ using namespace std;
 struct HeuristicData {
     int numFeature = 0;
     double flCos[MAX_NUM_FEATURE][MAX_NUM_FEATURE];
-    double flCorr[MAX_NUM_FEATURE][MAX_NUM_FEATURE];
+    double flCorr[MAX_NUM_FEATURE];
     double MI[MAX_NUM_FEATURE];
     double MIC[MAX_NUM_FEATURE];
     double V[MAX_NUM_FEATURE];
@@ -20,6 +20,8 @@ struct HeuristicData {
     vector<int> labels;
     uint32_t dimension_;
     uint32_t target_;
+
+    vector<vector<int> > labeledSamples;
 
     //todo
 
@@ -56,17 +58,24 @@ struct HeuristicData {
         vector<string> row = split(line, ',');
         numFeature = row.size() - 2;
         for (int i = 1; i <= numFeature; i++) {
-            vector<int> empty1;
-            allFeatures.push_back(empty1);
-            vector<int> empty2;
-            labeledFeatures.push_back(empty2);
+            vector<int> empty;
+            allFeatures.push_back(empty);
+            labeledFeatures.push_back(empty);
         }
         addDataFromRow(row);
         while (getline(cin, line)) {
             row = split(line, ',');
             addDataFromRow(row);
         }
-        cout<<"finish";
+    }
+
+    void init() {
+        calculateFlCos();
+        calculateMI();
+        calculateMIC();
+        for (int i = 0; i < numFeature; i++) {
+            V[i] = flCorr[i] =  MIC[i];
+        }
     }
 
     void calculateFlCos() {
@@ -78,17 +87,26 @@ struct HeuristicData {
     }
 
     void calculateMI() {
-        for (int i =0; i < numFeature; i++) {
+        for (int i = 0; i < numFeature; i++) {
             MI[i] = mutualInformation(labeledFeatures[i], labels);
         }
     }
 
-    //todo
     void calculateMIC() {
-
+        for (int i = 0; i < numFeature; i++) {
+            MIC[i] = MI[i];
+        }
     }
 
     void addDataFromRow(vector<string> row) {
+        if (row[numFeature + 1] == "1") {
+            vector<int> sample;
+            for (string s : row) {
+                sample.push_back(stoi(s));
+            }
+            labeledSamples.push_back(sample);
+        }
+
         for (int i = 0; i < numFeature; i++) {
             allFeatures[i].push_back(stoi(row[i]));
         }
@@ -98,6 +116,7 @@ struct HeuristicData {
             }
             labels.push_back(stoi(row[numFeature]));
         }
+
     }
 
     static double mutualInformation(const vector<int>& labeledFeature, const vector<int>& label) {
@@ -134,7 +153,7 @@ struct HeuristicData {
         return result;
     }
 
-    static double magnitude(const vector<int>& v) {
+    static double magnitude(const vector<int> &v) {
         double result = 0.0;
         for (double val : v) {
             result += val * val;

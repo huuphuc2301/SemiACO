@@ -10,17 +10,21 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <numeric>
+#include <random>
 
 using namespace std;
 
 // Define a struct to hold the KNN model
 struct KNN {
-    vector<vector<double>> X_train;
+    vector<vector<int> > x_train;
     vector<int> y_train;
+    vector<vector<int> > x_test;
+    vector<int> y_test;
     vector<int> features;
     int k;
 
-    double euclideanDistance(const vector<double> &p1, const vector<double> &p2) {
+    double euclideanDistance(const vector<int> &p1, const vector<int> &p2) {
         double distance = 0.0;
         for (int i : features) {
             distance += pow(p1[i] - p2[i], 2);
@@ -29,19 +33,33 @@ struct KNN {
     }
 
 
-    void fit(const vector<vector<double>> &X, const vector<int> &y) {
-        X_train = X;
-        y_train = y;
+    void init(const vector<vector<int> > &sample, const vector<int> &label, double trainPercentage) {
+        int size = sample.size();
+        vector<int> random(size);
+        iota(random.begin(), random.end(), 0);
+        std::random_device rd;
+        std::mt19937 gen(rd());
+
+        std::shuffle(random.begin(), random.end(), gen);
+        int trainNum = round(size * trainPercentage);
+        for (int i = 0; i < trainNum; i++) {
+            x_train.push_back(sample[i]);
+            y_train.push_back(label[i]);
+        }
+        for (int i = trainNum; i < size; i++) {
+            x_test.push_back(sample[i]);
+            y_test.push_back(label[i]);
+        }
     }
 
 
-    int predict(const vector<double> &x) {
-        vector<pair<double, int>> distances;
+    int predictLabel(const vector<int> &x) {
+        vector<pair<double, int> > distances;
 
         // Calculate distances between x and all training points
-        for (int i = 0; i < X_train.size(); ++i) {
-            double dist = euclideanDistance(x, X_train[i]);
-            distances.push_back({dist, y_train[i]});
+        for (int i = 0; i < x_train.size(); ++i) {
+            double dist = euclideanDistance(x, x_train[i]);
+            distances.push_back(make_pair(dist, y_train[i]));
         }
 
         // Sort distances
@@ -63,31 +81,24 @@ struct KNN {
             }
         }
 
-        return maxIndex;
+        return y_train[maxIndex];
+    }
+
+    double calculateAccuracy(vector<int> inputFeatures) {
+        this->features = inputFeatures;
+        int trueCnt = 0;
+        for (int i = 0; i < x_test.size(); ++i) {
+            int predictedLabel = predictLabel(x_test[i]);
+            trueCnt += predictedLabel == y_test[i];
+        }
+
+        return (double) trueCnt / (double) x_test.size();
     }
 };
 
-// Helper function to calculate Euclidean distance between two points
 
 
-int main() {
-    // Example usage
-    KNN classifier;
-    classifier.k = 2;
 
-    vector<vector<double>> X_train = {{1, 2},
-                                      {2, 3},
-                                      {3, 4}};
-    vector<int> y_train = {0, 1, 0};
-    classifier.fit(X_train, y_train);
-
-    vector<double> new_data = {2, 2};
-    int predicted_class = classifier.predict(new_data);
-
-    cout << "Predicted class: " << predicted_class << endl;
-
-    return 0;
-}
 
 
 #endif //SEMIACO_KNN_H
