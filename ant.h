@@ -21,27 +21,18 @@ struct RouteIterator {
 
 struct Solution {
     std::vector<uint32_t> route_;
-    double cost_ = std::numeric_limits<double>::max();
+    double accuracy = 0;
     std::vector<uint32_t> node_indices_;
 
     Solution() = default;
 
-    Solution(const std::vector<uint32_t> &route, double cost)
-        : route_(route),
-          cost_(cost),
-          node_indices_(route.size(), 0) {
-        update_node_indices();
-    }
-
     void add(uint32_t node, double cost) {
         route_.push_back(node);
         node_indices_[node] = route_.size() - 1;
-        cost_ += cost;
     }
 
     void update(const Solution *other) {
         route_ = other->route_;
-        cost_ = other->cost_;
         update_node_indices();
     }
 
@@ -74,15 +65,10 @@ struct Ant : public Solution {
     Bitmask  visited_bitmask_;
     uint32_t dimension_ = 0;
     uint32_t visited_count_ = 0;
+    std::vector<int> visited_;
+    double accuracyRate = 0;
 
     Ant() : Solution() {}
-
-    Ant(const std::vector<uint32_t> &route, double cost)
-        : Solution(route, cost),
-          unvisited_(route.size(), static_cast<uint32_t >(route.size())),
-          dimension_(static_cast<uint32_t>(route.size())),
-          visited_count_(static_cast<uint32_t>(route.size())) {
-    }
 
     void initialize(uint32_t dimension) {
         dimension_ = dimension;
@@ -102,19 +88,13 @@ struct Ant : public Solution {
 
         route_[visited_count_++] = node;
         visited_bitmask_.set_bit(node);
+        visited_.push_back(node);
     }
 
     bool is_visited(uint32_t node) const {
         return visited_bitmask_.get_bit(node);
     }
 
-    bool try_visit(uint32_t node) {
-        if (!is_visited(node)) {
-            visit(node);
-            return true;
-        }
-        return false;
-    }
 
     uint32_t get_current_node() const {
         return route_[visited_count_ - 1];

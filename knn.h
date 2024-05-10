@@ -22,7 +22,7 @@ struct KNN {
     vector<vector<int> > x_test;
     vector<int> y_test;
     vector<int> features;
-    int k;
+    int k = 5;
 
     double euclideanDistance(const vector<int> &p1, const vector<int> &p2) {
         double distance = 0.0;
@@ -35,12 +35,12 @@ struct KNN {
 
     void init(const vector<vector<int> > &sample, const vector<int> &label, double trainPercentage) {
         int size = sample.size();
-        vector<int> random(size);
-        iota(random.begin(), random.end(), 0);
-        std::random_device rd;
-        std::mt19937 gen(rd());
-
-        std::shuffle(random.begin(), random.end(), gen);
+//        vector<int> random(size);
+//        iota(random.begin(), random.end(), 0);
+//        std::random_device rd;
+//        std::mt19937 gen(rd());
+//
+//        std::shuffle(random.begin(), random.end(), gen);
         int trainNum = round(size * trainPercentage);
         for (int i = 0; i < trainNum; i++) {
             x_train.push_back(sample[i]);
