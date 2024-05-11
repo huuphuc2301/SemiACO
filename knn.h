@@ -50,6 +50,7 @@ struct KNN {
             x_test.push_back(sample[i]);
             y_test.push_back(label[i]);
         }
+        int x = 1;
     }
 
 
@@ -66,7 +67,7 @@ struct KNN {
         sort(distances.begin(), distances.end());
 
         // Count votes for each class
-        vector<int> classVotes(k, 0);
+        vector<int> classVotes(20, 0);
         for (int i = 0; i < k; ++i) {
             classVotes[distances[i].second]++;
         }
@@ -74,24 +75,23 @@ struct KNN {
         // Return the class with the most votes
         int maxVotes = 0;
         int maxIndex = -1;
-        for (int i = 0; i < k; ++i) {
+        for (int i = 0; i < 20; ++i) {
             if (classVotes[i] > maxVotes) {
                 maxVotes = classVotes[i];
                 maxIndex = i;
             }
         }
 
-        return y_train[maxIndex];
+        return maxIndex;
     }
 
     double calculateAccuracy(vector<int> inputFeatures) {
-        this->features = inputFeatures;
+        features = inputFeatures;
         int trueCnt = 0;
         for (int i = 0; i < x_test.size(); ++i) {
             int predictedLabel = predictLabel(x_test[i]);
             trueCnt += predictedLabel == y_test[i];
         }
-
         return (double) trueCnt / (double) x_test.size();
     }
 };

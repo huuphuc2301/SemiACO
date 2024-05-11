@@ -21,7 +21,6 @@ struct RouteIterator {
 
 struct Solution {
     std::vector<uint32_t> route_;
-    double accuracy = 0;
     std::vector<uint32_t> node_indices_;
 
     Solution() = default;
@@ -66,7 +65,8 @@ struct Ant : public Solution {
     uint32_t dimension_ = 0;
     uint32_t visited_count_ = 0;
     std::vector<int> visited_;
-    double accuracyRate = 0;
+    double total_MI = 0;
+    double accuracy = 0;
 
     Ant() : Solution() {}
 

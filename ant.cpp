@@ -25,6 +25,8 @@
 
 using namespace std;
 
+Timer timer;
+
 
 //choose the next node by probability
 uint32_t select_next_node(const double q0,
@@ -36,21 +38,37 @@ uint32_t select_next_node(const double q0,
     double products_sum = 0;
     double max_prod = 0;
 
+    double q = rnd.next();
+    if (q <= q0) {
+        //get max product node
+        double maxx = 0;
+        int res = 0;
+        for (int u : unvisited) {
+            double product = pheromone.get(u) * heuristic.getMutualInformation(u);
+            if (product > maxx) {
+                maxx = product;
+                res = u;
+            }
+        }
+        return res;
+    }
+
     ///calculate probability of each node and acculumate
     for (uint32_t i = 0; i < unvisited.size(); i++) {
         auto u = unvisited[i];
-        double product = pheromone.get(u) * heuristic.get(u);
+        double product = pheromone.get(u) * heuristic.getMutualInformation(u);
         product_prefix_sums[i] = product;
         if (i > 0) product_prefix_sums[i] += product_prefix_sums[i - 1];
     }
 
     ///random a real number
-    random_t rnd;
+
     long long mod = 1e9;
     double r = rnd.next(mod) / (double) mod;
     r *= product_prefix_sums[unvisited.size() - 1];
 
-    ///find the range to get the result node
+
+    ///find the range to getMutualInformation the result node
     for (uint32_t i = 0; i < unvisited.size(); i++) {
         if (r < product_prefix_sums[i]) return unvisited[i];
     }
@@ -79,12 +97,25 @@ struct MinMaxACOModel {
         pheromone_.evaporate_smooth();
     }
 
-    void deposit_pheromone_smooth(const Ant &sol) {
-        for (int node : sol.visited_) {
+    void deposit_pheromone_smooth(vector<int> nodes) {
+        for (int node : nodes) {
             pheromone_.increase_smooth(node);
         }
     }
 };
+
+vector<int> selectMaxCount(const vector<int>& counts, int number) {
+    vector<pair<int, int> > cntPairs;
+    for (int i = 0; i < counts.size(); i++) {
+        cntPairs.push_back(make_pair(counts[i], i));
+    }
+    sort(cntPairs.begin(), cntPairs.end());
+    vector<int> result;
+    for (int i = 0; i < number; i++) {
+        result.push_back(cntPairs[i].second);
+    }
+    return result;
+}
 
 void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) {
     const auto ants_count = opt.ants_count_;
@@ -97,11 +128,12 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
     vector<Ant> ants(ants_count);
 
     KNN knn;
-    knn.init(heuristic.labeledSamples, heuristic.labels, 0.8);
+    knn.init(heuristic.labeledSamples, heuristic.labels, 0.9);
 
     MinMaxACOModel model(opt, n);
     ///run multiple ants
     for (uint32_t iteration = 0 ; iteration < iterations ; ++iteration) {
+        Ant iteration_best_ant;
         for (uint32_t antId = 1; antId <= ants_count; antId++) {
             Ant ant;
             ant.initialize(n);
@@ -110,6 +142,7 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
             //select start node 
 
             ant.visit(current_node);
+            ant.total_MI += heuristic.getMutualInformation(current_node);
             //visit target number nodes
             for (uint32_t i = 1; i < target; i++) {
                 auto next_node = select_next_node(
@@ -119,26 +152,37 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
                     ant.get_unvisited_nodes()
                 );
                 ant.visit(next_node);
-
+                ant.total_MI += heuristic.getMutualInformation(next_node);
             }
-            ant.accuracyRate = knn.calculateAccuracy(ant.visited_);
-
-            if (ant.accuracyRate > best_ant.accuracyRate) {
-                best_ant = ant;
+            if (ant.total_MI > iteration_best_ant.total_MI) {
+                iteration_best_ant = ant;
             }
+
         }
         model.evaporate_pheromone_smooth();
-        model.deposit_pheromone_smooth(best_ant);
+        model.deposit_pheromone_smooth(iteration_best_ant.visited_);
 
+        iteration_best_ant.accuracy = knn.calculateAccuracy(iteration_best_ant.visited_);
+        if (iteration_best_ant.accuracy > best_ant.accuracy) {
+            best_ant = iteration_best_ant;
+        }
+
+        cout << iteration_best_ant.accuracy << ' ' << timer.get_elapsed_seconds() << '\n';
 
     }
-    int x = 1;
+    cout << best_ant.accuracy;
+    FILE *file = freopen("result.txt", "w", stdout);
+    for (int i : best_ant.visited_) {
+        cout << i << ", ";
+    }
+    fclose(file);
+    cout << 1;
 }
 
 int32_t main() {
-    HeuristicData heuristicData("./test/musk2_after_split.csv");
-
+    HeuristicData heuristicData("./test/musk2_train.csv");
     ProgramOptions programOptions;
+    rnd.setSeed(timer.get_elapsed_nanoseconds());
     run_origin_algo(programOptions, heuristicData);
 }
 

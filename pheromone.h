@@ -49,7 +49,7 @@ struct MatrixPheromone {
 
     void increase_smooth(uint32_t node) {
         assert(node < dimension_);
-        trails[node] = trails[node] - rho + tau_max;
+        trails[node] = trails[node] + tau_max;
         trails[node] = std::max(trails[node], trail_min);
         trails[node] = std::min(trails[node], trail_max);
     }

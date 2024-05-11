@@ -10,6 +10,7 @@ using namespace std;
 struct HeuristicData {
     int numFeature = 0;
     vector<double> V;
+    vector<double> MI;
 
     vector<vector<int> > allFeatures;
     vector<vector<int> > labeledFeatures;
@@ -19,12 +20,13 @@ struct HeuristicData {
     vector<vector<int> > labeledSamples;
 
     HeuristicData(const char* fileName) {
-        readDataFromFile("./test/musk2_after_split.csv");
+        readDataFromFile(fileName);
         init();
+        int x = 1;
     }
 
-    double get(int node) const {
-        return V[node];
+    double getMutualInformation(int node) const {
+        return MI[node];
     }
 
 
@@ -51,7 +53,11 @@ struct HeuristicData {
         dimension_ = numFeature;
         for (int i = 0; i < numFeature; i++) {
             V.push_back(1);
+            MI.push_back(calculateMutualInformation(labeledFeatures[i], labels));
+
         }
+
+        int x = 1;
     }
 
 
@@ -74,6 +80,41 @@ struct HeuristicData {
             labels.push_back(stoi(row[numFeature]));
         }
 
+    }
+
+    double calculateMutualInformation(const vector<int>& X, const vector<int>& Y) {
+        // Calculate joint probability distribution
+        map<pair<int, int>, double> jointProb;
+        map<int, double> marginalX, marginalY;
+        int n = X.size();
+
+        for (int i = 0; i < n; ++i) {
+            ++jointProb[make_pair(X[i], Y[i])];
+            ++marginalX[X[i]];
+            ++marginalY[Y[i]];
+        }
+
+        // Normalize probabilities
+        for (auto& elem : jointProb)
+            elem.second /= n;
+
+        for (auto& elem : marginalX)
+            elem.second /= n;
+
+        for (auto& elem : marginalY)
+            elem.second /= n;
+
+        // Calculate mutual information
+        double mutualInfo = 0.0;
+        for (const auto& elem : jointProb) {
+            double pXY = elem.second;
+            double pX = marginalX[elem.first.first];
+            double pY = marginalY[elem.first.second];
+
+            mutualInfo += pXY * log2(pXY / (pX * pY));
+        }
+
+        return mutualInfo;
     }
 
     static double mutualInformation(const vector<int>& labeledFeature, const vector<int>& label) {

@@ -8,11 +8,11 @@
 struct ProgramOptions {
     std::string algorithm_ = "faco";
 
-    uint32_t ants_count_ = 1;
+    uint32_t ants_count_ = 100;
 
     std::string id_ = "default";  // Id of the comp. experiment
 
-    int32_t iterations_ = 1;
+    int32_t iterations_ = 300;
 
     std::string problem_path_ = "kroA100.tsp";
 
@@ -25,7 +25,7 @@ struct ProgramOptions {
     double trail_min = 0.1;
     double trail_max = 1.0;
 
-    int target_ = 50;
+    int target_ = 100;
 
-    double q0 = 0.7;
+    double q0 = 0.3;
 };

@@ -15,7 +15,7 @@
  *
  * Also read about wnext() to generate off-center random distribution.
  *
- * See https://github.com/MikeMirzayanov/testlib/ to get latest version or bug tracker.
+ * See https://github.com/MikeMirzayanov/testlib/ to getMutualInformation latest version or bug tracker.
  */
 
 #ifndef _TESTLIB_H_
@@ -3934,7 +3934,7 @@ void registerInteraction(int argc, char* argv[])
     {
         quit(_fail, std::string("Program must be run with the following arguments: ") +
             std::string("<input-file> <output-file> [<answer-file> [<report-file> [<-appes>]]]") + 
-            "\nUse \"--help\" to get help information");
+            "\nUse \"--help\" to getMutualInformation help information");
     }
 
     if (argc <= 4)
@@ -4051,7 +4051,7 @@ void registerTestlibCmd(int argc, char* argv[])
     {
         quit(_fail, std::string("Program must be run with the following arguments: ") +
             std::string("<input-file> <output-file> <answer-file> [<report-file> [<-appes>]]") + 
-            "\nUse \"--help\" to get help information");
+            "\nUse \"--help\" to getMutualInformation help information");
     }
 
     if (argc == 4)
