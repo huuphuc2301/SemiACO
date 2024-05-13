@@ -14,7 +14,7 @@ def calculate_result(train_csv_path, test_csv_path, selected_feature_json):
     X_train = data_train[data_train["split_data"] == 1].iloc[:, selected_features]
     y_train = data_train[data_train["split_data"] == 1]["class"]
 
-    knn = KNeighborsClassifier()
+    knn = KNeighborsClassifier(5)
     knn.fit(X_train, y_train)
 
     X_test = data_test.iloc[:, selected_features]

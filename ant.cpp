@@ -93,8 +93,10 @@ struct MinMaxACOModel {
         pheromone_.init_smooth(dimension, options);
     }
 
-    void evaporate_pheromone_smooth() {
-        pheromone_.evaporate_smooth();
+    void evaporate_pheromone_smooth(vector<uint32_t> unvisited_nodes) {
+        for (int node : unvisited_nodes) {
+            pheromone_.evaporate_smooth(node);
+        }
     }
 
     void deposit_pheromone_smooth(vector<int> nodes) {
@@ -104,18 +106,6 @@ struct MinMaxACOModel {
     }
 };
 
-vector<int> selectMaxCount(const vector<int>& counts, int number) {
-    vector<pair<int, int> > cntPairs;
-    for (int i = 0; i < counts.size(); i++) {
-        cntPairs.push_back(make_pair(counts[i], i));
-    }
-    sort(cntPairs.begin(), cntPairs.end());
-    vector<int> result;
-    for (int i = 0; i < number; i++) {
-        result.push_back(cntPairs[i].second);
-    }
-    return result;
-}
 
 void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) {
     const auto ants_count = opt.ants_count_;
@@ -125,8 +115,6 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
     Ant best_ant;
     const int numFeature = heuristic.numFeature;
 
-    vector<Ant> ants(ants_count);
-
     KNN knn;
     knn.init(heuristic.labeledSamples, heuristic.labels, 0.9);
 
@@ -134,6 +122,8 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
     ///run multiple ants
     for (uint32_t iteration = 0 ; iteration < iterations ; ++iteration) {
         Ant iteration_best_ant;
+        vector<Ant> ants;
+        vector<pair<double, int> > MI_order;
         for (uint32_t antId = 1; antId <= ants_count; antId++) {
             Ant ant;
             ant.initialize(n);
@@ -154,21 +144,33 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
                 ant.visit(next_node);
                 ant.total_MI += heuristic.getMutualInformation(next_node);
             }
-            if (ant.total_MI > iteration_best_ant.total_MI) {
-                iteration_best_ant = ant;
-            }
-
+            ant.get_unvisited_nodes();
+            ants.push_back(ant);
+            MI_order.push_back(make_pair(ant.total_MI, antId - 1));
         }
-        model.evaporate_pheromone_smooth();
+
+//        choose iteration_best_ant
+        sort(MI_order.begin(), MI_order.end());
+        for (int i = ants_count - 1; i >= ants_count - 5; i--) {
+            ants[i].accuracy = knn.calculateAccuracy(ants[i].visited_);
+            if (ants[i].accuracy > iteration_best_ant.accuracy) {
+                iteration_best_ant = ants[i];
+            }
+        }
+
+        model.evaporate_pheromone_smooth(iteration_best_ant.get_unvisited_nodes());
         model.deposit_pheromone_smooth(iteration_best_ant.visited_);
 
-        iteration_best_ant.accuracy = knn.calculateAccuracy(iteration_best_ant.visited_);
+//        iteration_best_ant.accuracy = knn.calculateAccuracy(iteration_best_ant.visited_);
         if (iteration_best_ant.accuracy > best_ant.accuracy) {
             best_ant = iteration_best_ant;
         }
 
-        cout << iteration_best_ant.accuracy << ' ' << timer.get_elapsed_seconds() << '\n';
-
+        cout << "iteration " << iteration << ": " << '\n';
+        cout << best_ant.accuracy << ' ' << iteration_best_ant.accuracy << ' ' << timer.get_elapsed_seconds() << '\n';
+        for (int i : model.pheromone_.trails) cout << model.pheromone_.trails[i] << ' ';
+        cout << '\n';
+        cout << '\n';
     }
     cout << best_ant.accuracy;
     FILE *file = freopen("result.txt", "w", stdout);
@@ -180,8 +182,13 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
 }
 
 int32_t main() {
+//    FILE *file = freopen("result.txt", "w", stdout);
+//    for (int i = 0; i < 166; i++) {
+//        cout << i << ", ";
+//    }
     HeuristicData heuristicData("./test/musk2_train.csv");
     ProgramOptions programOptions;
+    programOptions.tau_min_ = programOptions.tau_max_ / (2.0 * heuristicData.numFeature);
     rnd.setSeed(timer.get_elapsed_nanoseconds());
     run_origin_algo(programOptions, heuristicData);
 }
