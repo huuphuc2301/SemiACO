@@ -67,6 +67,7 @@ struct Ant : public Solution {
     std::vector<int> visited_;
     double total_MI = 0;
     double accuracy = 0;
+    double f_score = 0;
 
     Ant() : Solution() {}
 

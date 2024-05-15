@@ -16,9 +16,7 @@
 #include "pheromone.h"
 #include "progargs.h"
 #include "utils.h"
-#include "rand.h"
 #include "heuristic.h"
-#include "rand.h"
 #include "knn.h"
 
 #define MAX_N 1005
@@ -116,7 +114,7 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
     const int numFeature = heuristic.numFeature;
 
     KNN knn;
-    knn.init(heuristic.labeledSamples, heuristic.labels, 0.9);
+    knn.init(heuristic.labeledSamples, heuristic.labels, 0.8);
 
     MinMaxACOModel model(opt, n);
     ///run multiple ants
@@ -152,23 +150,28 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
 //        choose iteration_best_ant
         sort(MI_order.begin(), MI_order.end());
         for (int i = ants_count - 1; i >= ants_count - 5; i--) {
-            ants[i].accuracy = knn.calculateAccuracy(ants[i].visited_);
-            if (ants[i].accuracy > iteration_best_ant.accuracy) {
-                iteration_best_ant = ants[i];
+            Ant ant = ants[MI_order[i].second];
+            ant.accuracy = knn.calculateAccuracy(ant.visited_);
+            if (ant.accuracy > iteration_best_ant.accuracy) {
+                iteration_best_ant = ant;
             }
         }
 
         model.evaporate_pheromone_smooth(iteration_best_ant.get_unvisited_nodes());
         model.deposit_pheromone_smooth(iteration_best_ant.visited_);
 
-//        iteration_best_ant.accuracy = knn.calculateAccuracy(iteration_best_ant.visited_);
-        if (iteration_best_ant.accuracy > best_ant.accuracy) {
+        iteration_best_ant.accuracy = knn.calculateAccuracy(iteration_best_ant.visited_);
+        iteration_best_ant.f_score = knn.calculateFscore(iteration_best_ant.visited_);
+        if (iteration_best_ant.accuracy > best_ant.accuracy
+        || (iteration_best_ant.accuracy == best_ant.accuracy && iteration_best_ant.f_score > best_ant.f_score)
+                ) {
             best_ant = iteration_best_ant;
+
         }
 
         cout << "iteration " << iteration << ": " << '\n';
         cout << best_ant.accuracy << ' ' << iteration_best_ant.accuracy << ' ' << timer.get_elapsed_seconds() << '\n';
-        for (int i : model.pheromone_.trails) cout << model.pheromone_.trails[i] << ' ';
+        for (double i : model.pheromone_.trails) cout << i << ' ';
         cout << '\n';
         cout << '\n';
     }

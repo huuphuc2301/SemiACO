@@ -94,6 +94,35 @@ struct KNN {
         }
         return (double) trueCnt / (double) x_test.size();
     }
+
+    double calculateFscore(vector<int> inputFeatures) {
+        features = inputFeatures;
+        vector<int> predictedLabels;
+        for (int i = 0; i < x_test.size(); i++) {
+            predictedLabels.push_back(predictLabel(x_test[i]));
+        }
+
+        int TP = 0; // True Positive
+        int FP = 0; // False Positive
+        int FN = 0; // False Negative
+
+        for (int i = 0; i < y_test.size(); i++) {
+            if (predictedLabels[i] == 1 && y_test[i] == 1) {
+                TP++;
+            } else if (predictedLabels[i] == 1 && y_test[i] != 1) {
+                FP++;
+            } else if (predictedLabels[i] != 1 && y_test[i] != predictedLabels[i]) {
+                FN++;
+            }
+        }
+
+        double precision = (TP + FP == 0) ? 0 : static_cast<double>(TP) / (TP + FP);
+        double recall = (TP + FN == 0) ? 0 : static_cast<double>(TP) / (TP + FN);
+
+        double f_score = (precision + recall == 0) ? 0 : 2 * (precision * recall) / (precision + recall);
+
+        return f_score;
+    }
 };
 
 

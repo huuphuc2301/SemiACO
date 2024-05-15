@@ -9,7 +9,7 @@ struct ProgramOptions {
 
     uint32_t ants_count_ = 30;
 
-    int32_t iterations_ = 300;
+    int32_t iterations_ = 200;
 
     double rho_ = 0.05;
     double tau_max_ = 1.0;
