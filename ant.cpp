@@ -171,8 +171,8 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
 
         cout << "iteration " << iteration << ": " << '\n';
         cout << best_ant.accuracy << ' ' << iteration_best_ant.accuracy << ' ' << timer.get_elapsed_seconds() << '\n';
-        for (double i : model.pheromone_.trails) cout << i << ' ';
-        cout << '\n';
+//        for (double i : model.pheromone_.trails) cout << i << ' ';
+//        cout << '\n';
         cout << '\n';
     }
     cout << best_ant.accuracy;
