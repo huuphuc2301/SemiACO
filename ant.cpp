@@ -66,7 +66,7 @@ uint32_t select_next_node(const double q0,
     ///calculate probability of each node and acculumate
     for (uint32_t i = 0; i < unvisited.size(); i++) {
         auto u = unvisited[i];
-        double product = pheromone.get(u) * heuristic.getMutualInformation(u) / totalCos(heuristic, visited, u);
+        double product = pheromone.get(u) * heuristic.getMutualInformation(u);
         if (visited.size() > 0) {
             product = product / totalCos(heuristic, visited, u);
         }
