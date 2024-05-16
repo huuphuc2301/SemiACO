@@ -24,9 +24,9 @@ struct KNN {
     vector<int> features;
     int k = 5;
 
-    double euclideanDistance(const vector<int> &p1, const vector<int> &p2) {
+    double euclideanDistance(const vector<int> &p1, const vector<int> &p2, vector<int> features_) {
         double distance = 0.0;
-        for (int i : features) {
+        for (int i : features_) {
             distance += pow(p1[i] - p2[i], 2);
         }
         return sqrt(distance);
@@ -59,7 +59,7 @@ struct KNN {
 
         // Calculate distances between x and all training points
         for (int i = 0; i < x_train.size(); ++i) {
-            double dist = euclideanDistance(x, x_train[i]);
+            double dist = euclideanDistance(x, x_train[i], features);
             distances.push_back(make_pair(dist, y_train[i]));
         }
 
@@ -83,6 +83,33 @@ struct KNN {
         }
 
         return maxIndex;
+    }
+
+    pair<double, double> calculateStatistic(vector<int> inputFeatures) {
+        features = inputFeatures;
+        int trueCnt = 0;
+        int TP = 0; // True Positive
+        int FP = 0; // False Positive
+        int FN = 0; // False Negative
+        for (int i = 0; i < x_test.size(); ++i) {
+            int predictedLabel = predictLabel(x_test[i]);
+            trueCnt += predictedLabel == y_test[i];
+
+            if (predictedLabel == 1 && y_test[i] == 1) {
+                TP++;
+            } else if (predictedLabel == 1 && y_test[i] != 1) {
+                FP++;
+            } else if (predictedLabel != 1 && y_test[i] != predictedLabel) {
+                FN++;
+            }
+        }
+
+        double precision = (TP + FP == 0) ? 0 : static_cast<double>(TP) / (TP + FP);
+        double recall = (TP + FN == 0) ? 0 : static_cast<double>(TP) / (TP + FN);
+
+        double f_score = (precision + recall == 0) ? 0 : 2 * (precision * recall) / (precision + recall);
+
+        return make_pair((double) trueCnt / (double) x_test.size(), f_score);
     }
 
     double calculateAccuracy(vector<int> inputFeatures) {

@@ -15,7 +15,7 @@ struct ProgramOptions {
     double tau_max_ = 1.0;
     double tau_min_ ;
 
-    int target_ = 100;
+    int target_ = 50;
 
     double q0 = 0.3;
 };

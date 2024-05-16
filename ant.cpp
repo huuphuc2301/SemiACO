@@ -27,10 +27,19 @@ Timer timer;
 
 
 //choose the next node by probability
+double totalCos(const HeuristicData &heuristic, vector<int> visited, int newNode) {
+    double sum = 0;
+    for (int i : visited) {
+        sum += heuristic.cos[i][newNode];
+    }
+    return sum;
+}
+
 uint32_t select_next_node(const double q0,
                           const MatrixPheromone &pheromone,
                           const HeuristicData &heuristic,
-                          const std::vector<uint32_t> unvisited) {
+                          const std::vector<uint32_t> unvisited,
+                          const std::vector<int> visited) {
     double product_prefix_sums[unvisited.size()];
 
     double products_sum = 0;
@@ -43,6 +52,9 @@ uint32_t select_next_node(const double q0,
         int res = 0;
         for (int u : unvisited) {
             double product = pheromone.get(u) * heuristic.getMutualInformation(u);
+            if (visited.size() > 0) {
+                product = product / totalCos(heuristic, visited, u);
+            }
             if (product > maxx) {
                 maxx = product;
                 res = u;
@@ -54,7 +66,10 @@ uint32_t select_next_node(const double q0,
     ///calculate probability of each node and acculumate
     for (uint32_t i = 0; i < unvisited.size(); i++) {
         auto u = unvisited[i];
-        double product = pheromone.get(u) * heuristic.getMutualInformation(u);
+        double product = pheromone.get(u) * heuristic.getMutualInformation(u) / totalCos(heuristic, visited, u);
+        if (visited.size() > 0) {
+            product = product / totalCos(heuristic, visited, u);
+        }
         product_prefix_sums[i] = product;
         if (i > 0) product_prefix_sums[i] += product_prefix_sums[i - 1];
     }
@@ -114,7 +129,8 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
     const int numFeature = heuristic.numFeature;
 
     KNN knn;
-    knn.init(heuristic.labeledSamples, heuristic.labels, 0.8);
+    knn.init(heuristic.labeledSamples, heuristic.labels, 0.6);
+
 
     MinMaxACOModel model(opt, n);
     ///run multiple ants
@@ -126,8 +142,8 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
             Ant ant;
             ant.initialize(n);
 
-            uint32_t current_node = select_next_node(opt.q0, model.get_pheromone(), heuristic, ant.get_unvisited_nodes());
-            //select start node 
+            uint32_t current_node = select_next_node(opt.q0, model.get_pheromone(), heuristic, ant.get_unvisited_nodes(), ant.visited_);
+            //select start node
 
             ant.visit(current_node);
             ant.total_MI += heuristic.getMutualInformation(current_node);
@@ -137,7 +153,8 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
                         opt.q0,
                     model.get_pheromone(),
                     heuristic,
-                    ant.get_unvisited_nodes()
+                    ant.get_unvisited_nodes(),
+                    ant.visited_
                 );
                 ant.visit(next_node);
                 ant.total_MI += heuristic.getMutualInformation(next_node);
@@ -151,8 +168,9 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
         sort(MI_order.begin(), MI_order.end());
         for (int i = ants_count - 1; i >= ants_count - 5; i--) {
             Ant ant = ants[MI_order[i].second];
-            ant.accuracy = knn.calculateAccuracy(ant.visited_);
-            if (ant.accuracy > iteration_best_ant.accuracy) {
+            pair<double, double> statistic = knn.calculateStatistic(ant.visited_);
+            ant.statistic = statistic;
+            if (ant.statistic > iteration_best_ant.statistic) {
                 iteration_best_ant = ant;
             }
         }
@@ -160,19 +178,14 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
         model.evaporate_pheromone_smooth(iteration_best_ant.get_unvisited_nodes());
         model.deposit_pheromone_smooth(iteration_best_ant.visited_);
 
-        iteration_best_ant.accuracy = knn.calculateAccuracy(iteration_best_ant.visited_);
-        iteration_best_ant.f_score = knn.calculateFscore(iteration_best_ant.visited_);
-        if (iteration_best_ant.accuracy > best_ant.accuracy
-        || (iteration_best_ant.accuracy == best_ant.accuracy && iteration_best_ant.f_score > best_ant.f_score)
-                ) {
+        if (iteration_best_ant.statistic > best_ant.statistic){
             best_ant = iteration_best_ant;
-
         }
 
         cout << "iteration " << iteration << ": " << '\n';
-        cout << best_ant.accuracy << ' ' << iteration_best_ant.accuracy << ' ' << timer.get_elapsed_seconds() << '\n';
-//        for (double i : model.pheromone_.trails) cout << i << ' ';
-//        cout << '\n';
+        cout << best_ant.statistic.first << ' ' << iteration_best_ant.statistic.first << ' ' << timer.get_elapsed_seconds() << '\n';
+        for (double i : model.pheromone_.trails) cout << i << ' ';
+        cout << '\n';
         cout << '\n';
     }
     cout << best_ant.accuracy;

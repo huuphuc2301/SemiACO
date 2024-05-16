@@ -11,6 +11,7 @@ struct HeuristicData {
     int numFeature = 0;
     vector<double> V;
     vector<double> MI;
+    vector<vector<double> > cos;
 
     vector<vector<int> > allFeatures;
     vector<vector<int> > labeledFeatures;
@@ -55,6 +56,14 @@ struct HeuristicData {
             V.push_back(1);
             MI.push_back(calculateMutualInformation(labeledFeatures[i], labels));
 
+        }
+
+        for (int i = 0; i < numFeature; i++) {
+            vector<double> cs;
+            for (int j = 0; j < numFeature; j++) {
+                cs.push_back(cosineSimilarity(labeledFeatures[i], labeledFeatures[j]));
+            }
+            cos.push_back(cs);
         }
 
         int x = 1;
