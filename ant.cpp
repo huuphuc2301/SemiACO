@@ -182,7 +182,7 @@ void run_origin_algo(const ProgramOptions &opt, HeuristicData &heuristic) {
 
         cout << "iteration " << iteration << ": " << '\n';
         cout << best_ant.statistic.first << ' ' << iteration_best_ant.statistic.first << ' ' << timer.get_elapsed_seconds() << '\n';
-        for (double i : model.pheromone_.trails) cout << i << ' ';
+//        for (double i : model.pheromone_.trails) cout << i << ' ';
         cout << '\n';
         cout << '\n';
     }
@@ -200,8 +200,8 @@ int32_t main(int argc, char *argv[]) {
 //    for (int i = 0; i < 500; i++) {
 //        cout << i << ", ";
 //    }
-    inputFile = "./test/madelon_train.csv";
-    outputFile = "./test/madelon_3_result.txt";
+    inputFile = "./test/arcene_train.csv";
+    outputFile = "./test/arcene_3_result.txt";
     HeuristicData heuristicData(inputFile);
     ProgramOptions programOptions;
     programOptions.tau_min_ = programOptions.tau_max_ / (2 * heuristicData.numFeature);
