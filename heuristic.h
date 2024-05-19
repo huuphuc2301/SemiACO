@@ -20,6 +20,8 @@ struct HeuristicData {
 
     vector<vector<int> > labeledSamples;
 
+    vector<pair<double, double> > singleStatistic;
+
     HeuristicData(const char* fileName) {
         readDataFromFile(fileName);
         init();
@@ -30,6 +32,9 @@ struct HeuristicData {
         return MI[node];
     }
 
+    double getSingleAccuracy(int node) const {
+        return singleStatistic[node].first;
+    }
 
     void readDataFromFile(const char *fileName) {
         freopen(fileName, "r", stdin);

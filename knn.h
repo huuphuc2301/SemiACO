@@ -17,11 +17,13 @@ using namespace std;
 
 // Define a struct to hold the KNN model
 struct KNN {
+    int numFeature;
     vector<vector<int> > x_train;
     vector<int> y_train;
     vector<vector<int> > x_test;
     vector<int> y_test;
     vector<int> features;
+    vector<pair<double, double> > singleStatistic;
     int k = 5;
 
     double euclideanDistance(const vector<int> &p1, const vector<int> &p2, vector<int> features_) {
@@ -49,6 +51,12 @@ struct KNN {
         for (int i = trainNum; i < size; i++) {
             x_test.push_back(sample[i]);
             y_test.push_back(label[i]);
+        }
+
+        for (int i = 0; i < numFeature; i++) {
+            vector<int> f;
+            f.push_back(i);
+            singleStatistic.push_back(calculateStatistic(f));
         }
         int x = 1;
     }

@@ -5,7 +5,7 @@ import argparse
 def split_dataset(csv_path, random_ratio, test_ratio):
     file_name = csv_path.split("/")[-1].split(".")[0]
     df = pd.read_csv(csv_path)
-    shuffled_df = df.sample(frac=1, random_state=2)
+    shuffled_df = df.sample(frac=1, random_state=22)
 
     test_size = int(test_ratio * len(shuffled_df))
     test_df = shuffled_df.iloc[:test_size, :]

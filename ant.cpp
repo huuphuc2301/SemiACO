@@ -25,6 +25,9 @@ using namespace std;
 
 Timer timer;
 
+char* inputFile;
+char* outputFile;
+
 
 //choose the next node by probability
 double totalCos(const HeuristicData &heuristic, vector<int> visited, int newNode) {
@@ -51,10 +54,7 @@ uint32_t select_next_node(const double q0,
         double maxx = 0;
         int res = 0;
         for (int u : unvisited) {
-            double product = pheromone.get(u) * heuristic.getMutualInformation(u);
-            if (visited.size() > 0) {
-                product = product / totalCos(heuristic, visited, u);
-            }
+            double product = pheromone.get(u) * heuristic.getMutualInformation(u) * heuristic.getSingleAccuracy(u);
             if (product > maxx) {
                 maxx = product;
                 res = u;
@@ -66,18 +66,14 @@ uint32_t select_next_node(const double q0,
     ///calculate probability of each node and acculumate
     for (uint32_t i = 0; i < unvisited.size(); i++) {
         auto u = unvisited[i];
-        double product = pheromone.get(u) * heuristic.getMutualInformation(u);
-        if (visited.size() > 0) {
-            product = product / totalCos(heuristic, visited, u);
-        }
+        double product = pheromone.get(u) * heuristic.getMutualInformation(u) * heuristic.getSingleAccuracy(u);
         product_prefix_sums[i] = product;
         if (i > 0) product_prefix_sums[i] += product_prefix_sums[i - 1];
     }
 
     ///random a real number
 
-    long long mod = 1e9;
-    double r = rnd.next(mod) / (double) mod;
+    double r = rnd.next();
     r *= product_prefix_sums[unvisited.size() - 1];
 
 
@@ -120,7 +116,7 @@ struct MinMaxACOModel {
 };
 
 
-void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) {
+void run_origin_algo(const ProgramOptions &opt, HeuristicData &heuristic) {
     const auto ants_count = opt.ants_count_;
     const auto iterations = opt.iterations_;
     const auto target = opt.target_;
@@ -129,8 +125,10 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
     const int numFeature = heuristic.numFeature;
 
     KNN knn;
+    knn.numFeature = numFeature;
     knn.init(heuristic.labeledSamples, heuristic.labels, 0.6);
 
+    heuristic.singleStatistic = knn.singleStatistic;
 
     MinMaxACOModel model(opt, n);
     ///run multiple ants
@@ -146,7 +144,7 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
             //select start node
 
             ant.visit(current_node);
-            ant.total_MI += heuristic.getMutualInformation(current_node);
+            ant.priority += heuristic.getMutualInformation(current_node) * heuristic.getSingleAccuracy(current_node);
             //visit target number nodes
             for (uint32_t i = 1; i < target; i++) {
                 auto next_node = select_next_node(
@@ -157,11 +155,11 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
                     ant.visited_
                 );
                 ant.visit(next_node);
-                ant.total_MI += heuristic.getMutualInformation(next_node);
+                ant.priority += heuristic.getMutualInformation(next_node) * heuristic.getSingleAccuracy(next_node);
             }
             ant.get_unvisited_nodes();
             ants.push_back(ant);
-            MI_order.push_back(make_pair(ant.total_MI, antId - 1));
+            MI_order.push_back(make_pair(ant.priority, antId - 1));
         }
 
 //        choose iteration_best_ant
@@ -189,7 +187,7 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
         cout << '\n';
     }
     cout << best_ant.accuracy;
-    FILE *file = freopen("result.txt", "w", stdout);
+    FILE *file = freopen(outputFile, "w", stdout);
     for (int i : best_ant.visited_) {
         cout << i << ", ";
     }
@@ -197,14 +195,16 @@ void run_origin_algo(const ProgramOptions &opt, const HeuristicData &heuristic) 
     cout << 1;
 }
 
-int32_t main() {
+int32_t main(int argc, char *argv[]) {
 //    FILE *file = freopen("result.txt", "w", stdout);
-//    for (int i = 0; i < 166; i++) {
+//    for (int i = 0; i < 500; i++) {
 //        cout << i << ", ";
 //    }
-    HeuristicData heuristicData("./test/musk2_train.csv");
+    inputFile = "./test/madelon_train.csv";
+    outputFile = "./test/madelon_3_result.txt";
+    HeuristicData heuristicData(inputFile);
     ProgramOptions programOptions;
-    programOptions.tau_min_ = programOptions.tau_max_ / (2.0 * heuristicData.numFeature);
+    programOptions.tau_min_ = programOptions.tau_max_ / (2 * heuristicData.numFeature);
     rnd.setSeed(timer.get_elapsed_nanoseconds());
     run_origin_algo(programOptions, heuristicData);
 }

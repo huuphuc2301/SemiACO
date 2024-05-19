@@ -7,7 +7,7 @@
 
 struct ProgramOptions {
 
-    uint32_t ants_count_ = 30;
+    uint32_t ants_count_ = 40;
 
     int32_t iterations_ = 200;
 

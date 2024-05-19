@@ -65,7 +65,7 @@ struct Ant : public Solution {
     uint32_t dimension_ = 0;
     uint32_t visited_count_ = 0;
     std::vector<int> visited_;
-    double total_MI = 0;
+    double priority = 0;
     std::pair<double, double> statistic;
     double accuracy = 0;
     double f_score = 0;
